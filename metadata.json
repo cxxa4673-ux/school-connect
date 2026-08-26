@@ -1,0 +1,6 @@
+{
+  "name": "School-Connect",
+  "description": "SaaS Education Ecosystem with NTA-standard CBT test engine, PYQ bank, dual Independent & Institution portal, and Gemini AI weakness tracker.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
