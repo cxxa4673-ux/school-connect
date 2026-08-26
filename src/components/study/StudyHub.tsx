@@ -1,17 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import {
-  BookOpen,
-  Video,
-  FileText,
-  Sparkles,
-  Download,
-  Play,
-  CheckCircle2,
-  Layers,
-  ChevronRight,
-  Search,
-} from 'lucide-react';
+import { BookOpen, Video, FileText, Sparkles, Download, Play, CircleCheck as CheckCircle2, Layers, ChevronRight, Search } from 'lucide-react';
 
 export const StudyHub: React.FC = () => {
   const { currentExam, triggerAIQuickPrompt } = useApp();

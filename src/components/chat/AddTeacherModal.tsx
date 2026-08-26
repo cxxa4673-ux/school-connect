@@ -1,18 +1,5 @@
 import React, { useState } from 'react';
-import {
-  X,
-  Search,
-  UserCheck,
-  BookOpen,
-  GraduationCap,
-  Sparkles,
-  MessageSquare,
-  CheckCircle2,
-  ShieldCheck,
-  Star,
-  Clock,
-  Send,
-} from 'lucide-react';
+import { X, Search, UserCheck, BookOpen, GraduationCap, Sparkles, MessageSquare, CircleCheck as CheckCircle2, ShieldCheck, Star, Clock, Send } from 'lucide-react';
 import { TEACHERS_DIRECTORY, TeacherDirectoryItem } from '../../data/mockData';
 import { SubjectName } from '../../types';
 

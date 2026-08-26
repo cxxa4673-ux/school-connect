@@ -1,16 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { DailyGoal } from '../../types';
-import {
-  CheckSquare,
-  Plus,
-  Flame,
-  CheckCircle2,
-  Calendar,
-  Sparkles,
-  Layers,
-  Award,
-} from 'lucide-react';
+import { SquareCheck as CheckSquare, Plus, Flame, CircleCheck as CheckCircle2, Calendar, Sparkles, Layers, Award } from 'lucide-react';
 
 export const DailyGoalsTracker: React.FC = () => {
   const { dailyGoals, toggleGoal, addDailyGoal, triggerAIQuickPrompt, currentUser } = useApp();

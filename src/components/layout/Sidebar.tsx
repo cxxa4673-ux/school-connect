@@ -1,30 +1,6 @@
 import React from 'react';
 import { useApp, AppView } from '../../context/AppContext';
-import {
-  LayoutDashboard,
-  BookOpen,
-  RotateCcw,
-  FileQuestion,
-  Timer,
-  Library,
-  MapPin,
-  History,
-  Bookmark,
-  CheckSquare,
-  Activity,
-  Users,
-  Building2,
-  GraduationCap,
-  Sparkles,
-  School,
-  FilePlus,
-  HelpCircle,
-  ShoppingBag,
-  Award,
-  Link2,
-  PanelLeftClose,
-  X,
-} from 'lucide-react';
+import { LayoutDashboard, BookOpen, RotateCcw, FileQuestionMark as FileQuestion, Timer, Library, MapPin, History, Bookmark, SquareCheck as CheckSquare, Activity, Users, Building2, GraduationCap, Sparkles, School, FilePlus, Circle as HelpCircle, ShoppingBag, Award, Link2, PanelLeftClose, X } from 'lucide-react';
 
 interface NavItem {
   id: AppView;

@@ -1,28 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { SubjectName, SyllabusChapter, StudentSyllabusProgress } from '../../types';
-import {
-  BookOpen,
-  CheckCircle2,
-  AlertTriangle,
-  Clock,
-  Sparkles,
-  Layers,
-  ChevronDown,
-  ChevronUp,
-  User,
-  Users,
-  Heart,
-  GraduationCap,
-  MessageSquare,
-  ShieldAlert,
-  ArrowRight,
-  RefreshCw,
-  Search,
-  Filter,
-  CheckCheck,
-  TrendingUp,
-} from 'lucide-react';
+import { BookOpen, CircleCheck as CheckCircle2, TriangleAlert as AlertTriangle, Clock, Sparkles, Layers, ChevronDown, ChevronUp, User, Users, Heart, GraduationCap, MessageSquare, ShieldAlert, ArrowRight, RefreshCw, Search, ListFilter as Filter, CheckCheck, TrendingUp } from 'lucide-react';
 
 export const SyllabusTracker: React.FC = () => {
   const {

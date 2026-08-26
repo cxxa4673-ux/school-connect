@@ -1,23 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import {
-  Sparkles,
-  Play,
-  TrendingUp,
-  Award,
-  CheckCircle2,
-  AlertTriangle,
-  Clock,
-  BookOpen,
-  ArrowRight,
-  Flame,
-  Target,
-  BarChart3,
-  Calendar,
-  Layers,
-  FileText,
-  ChevronRight,
-} from 'lucide-react';
+import { Sparkles, Play, TrendingUp, Award, CircleCheck as CheckCircle2, TriangleAlert as AlertTriangle, Clock, BookOpen, ArrowRight, Flame, Target, ChartBar as BarChart3, Calendar, Layers, FileText, ChevronRight } from 'lucide-react';
 
 export const StudentDashboard: React.FC = () => {
   const {

@@ -1,15 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import {
-  Library,
-  BookOpen,
-  CheckCircle2,
-  Sparkles,
-  HelpCircle,
-  Search,
-  ExternalLink,
-  ChevronRight,
-} from 'lucide-react';
+import { Library, BookOpen, CircleCheck as CheckCircle2, Sparkles, Circle as HelpCircle, Search, ExternalLink, ChevronRight } from 'lucide-react';
 
 export const NCERTHub: React.FC = () => {
   const { currentExam, triggerAIQuickPrompt } = useApp();

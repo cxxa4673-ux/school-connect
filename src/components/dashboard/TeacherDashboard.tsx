@@ -1,19 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Question } from '../../types';
-import {
-  GraduationCap,
-  BookOpen,
-  Plus,
-  Star,
-  CheckCircle2,
-  HelpCircle,
-  FileText,
-  DollarSign,
-  Sparkles,
-  Award,
-  Layers,
-} from 'lucide-react';
+import { GraduationCap, BookOpen, Plus, Star, CircleCheck as CheckCircle2, Circle as HelpCircle, FileText, DollarSign, Sparkles, Award, Layers } from 'lucide-react';
 
 interface TeacherDashboardProps {
   initialTab?: 'overview' | 'batches' | 'create-question' | 'marketplace' | 'doubts';

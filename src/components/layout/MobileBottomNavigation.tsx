@@ -1,17 +1,6 @@
 import React from 'react';
 import { useApp, AppView } from '../../context/AppContext';
-import {
-  LayoutDashboard,
-  BookOpen,
-  HelpCircle,
-  User,
-  Sparkles,
-  Users,
-  GraduationCap,
-  Building2,
-  FileQuestion,
-  RotateCcw,
-} from 'lucide-react';
+import { LayoutDashboard, BookOpen, Circle as HelpCircle, User, Sparkles, Users, GraduationCap, Building2, FileQuestionMark as FileQuestion, RotateCcw } from 'lucide-react';
 
 export const MobileBottomNavigation: React.FC = () => {
   const {

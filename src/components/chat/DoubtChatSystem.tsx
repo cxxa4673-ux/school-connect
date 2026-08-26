@@ -1,48 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { SubjectName, ChatChannelType, ChatAttachment, ChatMessage } from '../../types';
-import {
-  Search,
-  Send,
-  Paperclip,
-  CheckCheck,
-  User,
-  Users,
-  Heart,
-  GraduationCap,
-  HelpCircle,
-  CheckCircle2,
-  Lock,
-  Plus,
-  Image as ImageIcon,
-  Code2,
-  FileText,
-  Mic,
-  Video,
-  Phone,
-  PhoneCall,
-  VideoOff,
-  MicOff,
-  MoreVertical,
-  Smile,
-  X,
-  ArrowLeft,
-  ChevronDown,
-  Shield,
-  ArrowRightLeft,
-  Download,
-  Share2,
-  ExternalLink,
-  UserPlus,
-  Play,
-  RotateCcw,
-  School,
-  Sparkles,
-  BookOpen,
-  Filter,
-  Check,
-  MessageSquare,
-} from 'lucide-react';
+import { Search, Send, Paperclip, CheckCheck, User, Users, Heart, GraduationCap, Circle as HelpCircle, CircleCheck as CheckCircle2, Lock, Plus, Image as ImageIcon, Code as Code2, FileText, Mic, Video, Phone, PhoneCall, VideoOff, MicOff, MoveVertical as MoreVertical, Smile, X, ArrowLeft, ChevronDown, Shield, ArrowRightLeft, Download, Share2, ExternalLink, UserPlus, Play, RotateCcw, School, Sparkles, BookOpen, ListFilter as Filter, Check, MessageSquare } from 'lucide-react';
 import { AudioPlayerBubble } from './AudioPlayerBubble';
 import { MediaLightboxModal } from './MediaLightboxModal';
 import { AddClassmateModal } from './AddClassmateModal';

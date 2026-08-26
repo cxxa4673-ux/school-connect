@@ -1,17 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { UserRole, UserProfile } from '../../types';
-import {
-  Users,
-  Building2,
-  GraduationCap,
-  Sparkles,
-  CheckCircle2,
-  X,
-  ArrowRight,
-  School,
-  ShieldCheck,
-} from 'lucide-react';
+import { Users, Building2, GraduationCap, Sparkles, CircleCheck as CheckCircle2, X, ArrowRight, School, ShieldCheck } from 'lucide-react';
 
 export const AuthModal: React.FC = () => {
   const { isAuthModalOpen, setIsAuthModalOpen, setCurrentUser, switchRolePreset, currentUser } = useApp();

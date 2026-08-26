@@ -1,25 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { getProgressReport, ProgressReportResponse } from '../../services/aiService';
-import {
-  Users,
-  ShieldCheck,
-  TrendingUp,
-  Award,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  Sparkles,
-  Link2,
-  FileText,
-  Calendar,
-  BarChart2,
-  Activity,
-  Heart,
-  ChevronRight,
-  MessageSquare,
-  BookOpen,
-} from 'lucide-react';
+import { Users, ShieldCheck, TrendingUp, Award, Clock, CircleCheck as CheckCircle2, TriangleAlert as AlertTriangle, Sparkles, Link2, FileText, Calendar, ChartBar as BarChart2, Activity, Heart, ChevronRight, MessageSquare, BookOpen } from 'lucide-react';
 
 interface ParentDashboardProps {
   initialTab?: 'overview' | 'reports' | 'link' | 'tests';

@@ -1,28 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import {
-  RotateCcw,
-  BookOpen,
-  Zap,
-  Bookmark,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  Sparkles,
-  Download,
-  Share2,
-  HelpCircle,
-  ChevronRight,
-  Flame,
-  Search,
-  Filter,
-  Check,
-  Brain,
-  FileText,
-  Clock,
-  ArrowRight,
-  GraduationCap,
-} from 'lucide-react';
+import { RotateCcw, BookOpen, Zap, Bookmark, CircleCheck as CheckCircle2, Circle as XCircle, TriangleAlert as AlertTriangle, Sparkles, Download, Share2, Circle as HelpCircle, ChevronRight, Flame, Search, ListFilter as Filter, Check, Brain, FileText, Clock, ArrowRight, GraduationCap } from 'lucide-react';
 
 interface Flashcard {
   id: string;

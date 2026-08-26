@@ -1,18 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Test, ExamType } from '../../types';
-import {
-  Timer,
-  Play,
-  Sparkles,
-  Award,
-  Clock,
-  HelpCircle,
-  Layers,
-  ChevronRight,
-  Search,
-  CheckCircle2,
-} from 'lucide-react';
+import { Timer, Play, Sparkles, Award, Clock, Circle as HelpCircle, Layers, ChevronRight, Search, CircleCheck as CheckCircle2 } from 'lucide-react';
 
 export const TestSeriesList: React.FC = () => {
   const { tests, startCBTTest, currentExam, setCurrentExam } = useApp();

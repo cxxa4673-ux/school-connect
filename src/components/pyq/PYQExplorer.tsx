@@ -2,21 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Question, SubjectName } from '../../types';
 import { explainQuestionAI, QuestionExplanationResponse } from '../../services/aiService';
-import {
-  Search,
-  Filter,
-  CheckCircle2,
-  XCircle,
-  Bookmark,
-  Sparkles,
-  HelpCircle,
-  Clock,
-  Layers,
-  Award,
-  ChevronDown,
-  RotateCcw,
-  BookOpen,
-} from 'lucide-react';
+import { Search, ListFilter as Filter, CircleCheck as CheckCircle2, Circle as XCircle, Bookmark, Sparkles, Circle as HelpCircle, Clock, Layers, Award, ChevronDown, RotateCcw, BookOpen } from 'lucide-react';
 
 export const PYQExplorer: React.FC = () => {
   const { questions, toggleBookmark, isBookmarked, currentExam, triggerAIQuickPrompt } = useApp();

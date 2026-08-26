@@ -3,20 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { Test, QuestionResponse, TestAttempt, SubjectName } from '../../types';
 import { getWeaknessAnalysis } from '../../services/aiService';
 import confetti from 'canvas-confetti';
-import {
-  Clock,
-  AlertTriangle,
-  CheckCircle2,
-  Bookmark,
-  ChevronLeft,
-  ChevronRight,
-  HelpCircle,
-  FileText,
-  Send,
-  Sparkles,
-  Shield,
-  Layers,
-} from 'lucide-react';
+import { Clock, TriangleAlert as AlertTriangle, CircleCheck as CheckCircle2, Bookmark, ChevronLeft, ChevronRight, Circle as HelpCircle, FileText, Send, Sparkles, Shield, Layers } from 'lucide-react';
 
 export const CBTTestEngine: React.FC = () => {
   const { activeTest, submitTestAttempt, currentUser, setCurrentView } = useApp();

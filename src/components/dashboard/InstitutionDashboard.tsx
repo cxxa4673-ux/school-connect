@@ -1,21 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import {
-  Building2,
-  Users,
-  GraduationCap,
-  Plus,
-  Search,
-  CheckCircle2,
-  Star,
-  Award,
-  BookOpen,
-  Calendar,
-  Layers,
-  ArrowUpRight,
-  Shield,
-  FileCheck,
-} from 'lucide-react';
+import { Building2, Users, GraduationCap, Plus, Search, CircleCheck as CheckCircle2, Star, Award, BookOpen, Calendar, Layers, ArrowUpRight, Shield, FileCheck } from 'lucide-react';
 
 interface InstitutionDashboardProps {
   initialTab?: 'batches' | 'students' | 'faculty' | 'tests';

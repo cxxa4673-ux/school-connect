@@ -1,18 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import {
-  User,
-  Copy,
-  CheckCircle2,
-  Building2,
-  X,
-  Award,
-  BookOpen,
-  Link2,
-  Trash2,
-  ShieldCheck,
-  AlertTriangle,
-} from 'lucide-react';
+import { User, Copy, CircleCheck as CheckCircle2, Building2, X, Award, BookOpen, Link2, Trash2, ShieldCheck, TriangleAlert as AlertTriangle } from 'lucide-react';
 
 export const ProfileModal: React.FC = () => {
   const {

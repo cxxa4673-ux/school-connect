@@ -1,18 +1,5 @@
 import React, { useState } from 'react';
-import {
-  X,
-  Search,
-  Users,
-  MessageSquare,
-  CheckCircle2,
-  ShieldCheck,
-  Sparkles,
-  Phone,
-  Send,
-  UserCheck,
-  Award,
-  CalendarCheck,
-} from 'lucide-react';
+import { X, Search, Users, MessageSquare, CircleCheck as CheckCircle2, ShieldCheck, Sparkles, Phone, Send, UserCheck, Award, CalendarCheck } from 'lucide-react';
 import {
   STUDENT_PARENT_DIRECTORY,
   StudentParentDirectoryItem,

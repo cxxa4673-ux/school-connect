@@ -1,15 +1,6 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import {
-  History,
-  TrendingUp,
-  Award,
-  Clock,
-  ArrowRight,
-  Sparkles,
-  Calendar,
-  CheckCircle2,
-} from 'lucide-react';
+import { History, TrendingUp, Award, Clock, ArrowRight, Sparkles, Calendar, CircleCheck as CheckCircle2 } from 'lucide-react';
 
 export const TestHistoryView: React.FC = () => {
   const { testAttempts, viewAttemptResult, setCurrentView } = useApp();

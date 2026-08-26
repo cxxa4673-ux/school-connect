@@ -1,24 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { TestAttempt } from '../../types';
-import {
-  Award,
-  TrendingUp,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  Sparkles,
-  Clock,
-  RotateCcw,
-  BookOpen,
-  ArrowRight,
-  ChevronDown,
-  Layers,
-  FileQuestion,
-  HelpCircle,
-  Share2,
-  MessageSquare,
-} from 'lucide-react';
+import { Award, TrendingUp, CircleCheck as CheckCircle2, Circle as XCircle, TriangleAlert as AlertTriangle, Sparkles, Clock, RotateCcw, BookOpen, ArrowRight, ChevronDown, Layers, FileQuestionMark as FileQuestion, Circle as HelpCircle, Share2, MessageSquare } from 'lucide-react';
 
 export const TestResultView: React.FC = () => {
   const { testAttempts, currentAttempt, tests, startCBTTest, setCurrentView, triggerAIQuickPrompt, openChatWithTeacher } = useApp();
