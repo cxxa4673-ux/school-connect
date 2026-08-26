@@ -2,36 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { sendAIChatMessage } from '../../services/aiService';
 import { ExamType } from '../../types';
-import {
-  Sparkles,
-  X,
-  Send,
-  Bot,
-  User,
-  Plus,
-  ArrowUp,
-  Search,
-  Calendar,
-  MessageSquare,
-  ChevronDown,
-  ArrowLeft,
-  Volume2,
-  VolumeX,
-  Copy,
-  Check,
-  Mic,
-  MicOff,
-  Clock,
-  RotateCcw,
-  AlertCircle,
-  CheckCircle2,
-  XCircle,
-  HelpCircle,
-  Award,
-  BookOpen,
-  ChevronRight,
-  TrendingUp,
-} from 'lucide-react';
+import { Sparkles, X, Send, Bot, User, Plus, ArrowUp, Search, Calendar, MessageSquare, ChevronDown, ArrowLeft, Volume2, VolumeX, Copy, Check, Mic, MicOff, Clock, RotateCcw, CircleAlert as AlertCircle, CircleCheck as CheckCircle2, Circle as XCircle, Circle as HelpCircle, Award, BookOpen, ChevronRight, TrendingUp } from 'lucide-react';
 
 export const ConnectAIAssistant: React.FC = () => {
   const {

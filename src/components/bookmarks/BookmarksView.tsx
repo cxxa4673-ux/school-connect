@@ -1,15 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Question } from '../../types';
-import {
-  Bookmark,
-  Trash2,
-  Sparkles,
-  BookOpen,
-  CheckCircle2,
-  XCircle,
-  HelpCircle,
-} from 'lucide-react';
+import { Bookmark, Trash2, Sparkles, BookOpen, CircleCheck as CheckCircle2, Circle as XCircle, Circle as HelpCircle } from 'lucide-react';
 
 export const BookmarksView: React.FC = () => {
   const { bookmarks, toggleBookmark, triggerAIQuickPrompt, setCurrentView } = useApp();
