@@ -18,6 +18,7 @@ import {
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
+  LogOut,
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -36,6 +37,8 @@ export const Navbar: React.FC = () => {
     setIsProfileModalOpen,
     setIsAuthModalOpen,
     setIsRoleSheetOpen,
+    isAuthenticated,
+    logoutAccount,
   } = useApp();
 
   const [copiedId, setCopiedId] = useState(false);
@@ -372,6 +375,18 @@ export const Navbar: React.FC = () => {
               className="w-7 h-7 rounded-full object-cover border border-blue-500/50"
             />
           </button>
+
+          {/* Sign Out (only for real, authenticated accounts) */}
+          {isAuthenticated && (
+            <button
+              onClick={() => logoutAccount()}
+              className="p-1.5 rounded-md text-slate-500 hover:text-rose-400 hover:bg-slate-800 transition border border-transparent hover:border-slate-700"
+              title="Sign Out"
+              aria-label="Sign Out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     </header>

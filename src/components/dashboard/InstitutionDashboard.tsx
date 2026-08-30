@@ -1,17 +1,48 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Building2, Users, GraduationCap, Plus, Search, CircleCheck as CheckCircle2, Star, Award, BookOpen, Calendar, Layers, ArrowUpRight, Shield, FileCheck } from 'lucide-react';
+import { Building2, Users, GraduationCap, Plus, Search, CircleCheck as CheckCircle2, Star, Award, BookOpen, Calendar, Layers, ArrowUpRight, Shield, FileCheck, CircleAlert as AlertCircle } from 'lucide-react';
+import { validateLinkedId } from '../../lib/validate';
+import { STUDENT_PARENT_DIRECTORY, CLASSMATE_DIRECTORY } from '../../data/mockData';
 
 interface InstitutionDashboardProps {
   initialTab?: 'batches' | 'students' | 'faculty' | 'tests';
 }
 
 export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({ initialTab = 'batches' }) => {
-  const { institution, updateInstitution, addStudentToInstitution, currentUser, tests } = useApp();
+  const { institution, updateInstitution, addStudentToInstitution, currentUser, tests, setCurrentView } = useApp();
 
   const [studentIdInput, setStudentIdInput] = useState('');
   const [selectedBatch, setSelectedBatch] = useState(institution.batches[0]?.id || '');
-  const [enrollMsg, setEnrollMsg] = useState<string | null>(null);
+  const [enrollMsg, setEnrollMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  // Create-batch form state (real, persisted via updateInstitution).
+  const [showCreateBatch, setShowCreateBatch] = useState(false);
+  const [batchName, setBatchName] = useState('');
+  const [batchExam, setBatchExam] = useState<'JEE Main' | 'JEE Advanced' | 'NEET UG' | 'CBSE Class 12'>('JEE Main');
+  const [batchClass, setBatchClass] = useState('Class 12');
+  const [batchSchedule, setBatchSchedule] = useState('Mon/Wed/Fri · 5-7 PM');
+  const [batchMsg, setBatchMsg] = useState<string | null>(null);
+
+  const handleCreateBatch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!batchName.trim()) return;
+    const newBatch = {
+      id: `batch_fac_${Date.now()}`,
+      institutionId: institution.id,
+      name: batchName.trim(),
+      targetExam: batchExam,
+      standardClass: batchClass,
+      teacherName: currentUser.name,
+      teacherId: currentUser.id,
+      studentCount: 0,
+      schedule: batchSchedule,
+    };
+    updateInstitution({ batches: [...institution.batches, newBatch] });
+    setBatchMsg(`✅ Batch "${batchName.trim()}" created.`);
+    setBatchName('');
+    setShowCreateBatch(false);
+    setTimeout(() => setBatchMsg(null), 3500);
+  };
 
   const [activeTab, setActiveTab] = useState<'batches' | 'students' | 'faculty' | 'tests'>(initialTab);
 
@@ -21,11 +52,23 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({ init
     }
   }, [initialTab]);
 
+  // Known real student IDs (used to validate an enroll request in demo mode).
+  const knownStudentIds = [
+    ...CLASSMATE_DIRECTORY.map((c) => c.schoolConnectId),
+    ...STUDENT_PARENT_DIRECTORY.map((s) => s.studentSchoolConnectId),
+  ];
+
   const handleEnrollStudent = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!studentIdInput) return;
+    const check = validateLinkedId(studentIdInput, { expected: 'STU', directory: knownStudentIds });
+    if (!check.valid) {
+      setEnrollMsg({ ok: false, text: check.message });
+      setTimeout(() => setEnrollMsg(null), 3500);
+      return;
+    }
     addStudentToInstitution(studentIdInput.toUpperCase(), selectedBatch);
-    setEnrollMsg(`Enrolled student ${studentIdInput.toUpperCase()} into ${institution.batches.find((b) => b.id === selectedBatch)?.name}`);
+    const batchName = institution.batches.find((b) => b.id === selectedBatch)?.name;
+    setEnrollMsg({ ok: true, text: `Enrolled student ${studentIdInput.toUpperCase()} into ${batchName}` });
     setStudentIdInput('');
     setTimeout(() => setEnrollMsg(null), 3500);
   };
@@ -98,12 +141,71 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({ init
         </div>
 
         <div className="flex items-center gap-2 w-full md:w-auto">
-          <button className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold text-xs shadow-md transition">
+          <button
+            onClick={() => setShowCreateBatch((v) => !v)}
+            className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold text-xs shadow-md transition"
+          >
             <Plus className="w-4 h-4" />
-            <span>Create New Batch</span>
+            <span>{showCreateBatch ? 'Cancel' : 'Create New Batch'}</span>
           </button>
         </div>
       </div>
+
+      {/* Create-batch form */}
+      {showCreateBatch && (
+        <form onSubmit={handleCreateBatch} className="p-4 rounded-xl bg-slate-900 border border-slate-700 space-y-3 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="sm:col-span-2">
+              <label className="block text-slate-400 mb-1">Batch Name</label>
+              <input
+                type="text"
+                value={batchName}
+                onChange={(e) => setBatchName(e.target.value)}
+                placeholder="e.g. JEE 2027 Target 99+ Alpha"
+                className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-amber-500"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-slate-400 mb-1">Target Exam</label>
+              <select value={batchExam} onChange={(e: any) => setBatchExam(e.target.value)} className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200">
+                <option>JEE Main</option>
+                <option>JEE Advanced</option>
+                <option>NEET UG</option>
+                <option>CBSE Class 12</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-slate-400 mb-1">Class</label>
+              <input
+                type="text"
+                value={batchClass}
+                onChange={(e) => setBatchClass(e.target.value)}
+                className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-amber-500"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-slate-400 mb-1">Schedule</label>
+              <input
+                type="text"
+                value={batchSchedule}
+                onChange={(e) => setBatchSchedule(e.target.value)}
+                className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-amber-500"
+              />
+            </div>
+          </div>
+          <button type="submit" className="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold text-xs">
+            Create Batch
+          </button>
+        </form>
+      )}
+
+      {batchMsg && (
+        <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4" />
+          <span>{batchMsg}</span>
+        </div>
+      )}
 
       {/* Enroll Student by Unique ID Bar */}
       <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -146,9 +248,15 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({ init
       </div>
 
       {enrollMsg && (
-        <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4" />
-          <span>{enrollMsg}</span>
+        <div
+          className={`p-3 rounded-lg text-xs flex items-center gap-2 border ${
+            enrollMsg.ok
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+              : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+          }`}
+        >
+          {enrollMsg.ok ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+          <span>{enrollMsg.text}</span>
         </div>
       )}
 
@@ -196,7 +304,10 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({ init
               <Award className="w-4 h-4 text-amber-400" />
               <span>Institutional Mock Test Series & Batch Leaderboard</span>
             </h2>
-            <button className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold">
+            <button
+              onClick={() => setCurrentView('test-series')}
+              className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold"
+            >
               + Schedule Institute Test
             </button>
           </div>
@@ -231,7 +342,10 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({ init
 
                 <div className="flex items-center justify-between pt-1 text-xs">
                   <span className="text-slate-400 font-mono text-[11px]">Duration: {t.durationMinutes} mins</span>
-                  <button className="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-blue-300 text-xs font-medium">
+                  <button
+                    onClick={() => setCurrentView('history')}
+                    className="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-blue-300 text-xs font-medium"
+                  >
                     View Rank List & Analytics
                   </button>
                 </div>
@@ -267,10 +381,16 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({ init
               </div>
 
               <div className="flex items-center gap-2 pt-2">
-                <button className="flex-1 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 transition">
+                <button
+                  onClick={() => setCurrentView('test-series')}
+                  className="flex-1 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 transition"
+                >
                   Assign CBT Test
                 </button>
-                <button className="py-1.5 px-2.5 rounded bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 text-xs font-semibold transition">
+                <button
+                  onClick={() => setCurrentView('history')}
+                  className="py-1.5 px-2.5 rounded bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 text-xs font-semibold transition"
+                >
                   Report
                 </button>
               </div>
@@ -305,7 +425,10 @@ export const InstitutionDashboard: React.FC<InstitutionDashboardProps> = ({ init
                   <td className="py-3 px-3 font-mono text-purple-400">{stu.percentile}</td>
                   <td className="py-3 px-3 text-slate-300">{stu.attendance}</td>
                   <td className="py-3 px-3">
-                    <button className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[11px] text-blue-300">
+                    <button
+                      onClick={() => setCurrentView('syllabus')}
+                      className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[11px] text-blue-300"
+                    >
                       View Progress
                     </button>
                   </td>

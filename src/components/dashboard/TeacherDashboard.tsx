@@ -1,24 +1,28 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Question } from '../../types';
+import { Question, Test, ResourceItem } from '../../types';
 import { GraduationCap, BookOpen, Plus, Star, CircleCheck as CheckCircle2, Circle as HelpCircle, FileText, DollarSign, Sparkles, Award, Layers } from 'lucide-react';
 
 interface TeacherDashboardProps {
-  initialTab?: 'overview' | 'batches' | 'create-question' | 'marketplace' | 'doubts';
+  initialTab?: 'overview' | 'batches' | 'create-question' | 'create-test' | 'marketplace' | 'doubts';
 }
 
 export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ initialTab = 'overview' }) => {
   const {
     currentUser,
     addNewQuestion,
+    createTest,
     questions,
     institution,
     setCurrentView,
     openChatWithTeacher,
     setActiveChannelId,
+    marketplaceItems,
+    addMarketplaceItem,
+    removeMarketplaceItem,
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'batches' | 'create-question' | 'marketplace' | 'doubts'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'overview' | 'batches' | 'create-question' | 'create-test' | 'marketplace' | 'doubts'>(initialTab);
 
   React.useEffect(() => {
     if (initialTab) {
@@ -76,35 +80,77 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ initialTab =
     setTimeout(() => setSavedMsg(null), 3000);
   };
 
-  const sampleMarketplaceItems = [
-    {
-      id: 'prod_1',
-      title: 'Ray Optics 100 Most Expected High-Yield Questions with AI Video Solutions',
-      price: '₹299',
-      isFree: false,
-      downloads: 420,
-      rating: 4.9,
-      tag: 'JEE Advanced',
-    },
-    {
-      id: 'prod_2',
-      title: 'Complete Organic Chemistry Reaction Mechanisms Mind Map Cheat Sheet',
-      price: 'Free',
-      isFree: true,
-      downloads: 1250,
-      rating: 4.95,
-      tag: 'JEE Main & NEET',
-    },
-    {
-      id: 'prod_3',
-      title: 'Calculus & Definite Integration King Property Speed Hacks (2020-2025 PYQs)',
-      price: '₹199',
-      isFree: false,
-      downloads: 310,
-      rating: 4.85,
-      tag: 'Class 12 Boards / JEE',
-    },
-  ];
+  // ===== CREATE TEST FORM STATE =====
+  const [testTitle, setTestTitle] = useState('');
+  const [testDuration, setTestDuration] = useState(60);
+  const [testMarks, setTestMarks] = useState(100);
+  const [testExam, setTestExam] = useState<'JEE Main' | 'JEE Advanced' | 'NEET UG' | 'CBSE Class 12'>('JEE Main');
+  const [testType, setTestType] = useState<'Full Mock' | 'Chapter Test' | 'PYQ Paper' | 'Institution Assessment'>('Chapter Test');
+  const [testSubject, setTestSubject] = useState<'Physics' | 'Chemistry' | 'Mathematics' | 'Biology' | 'All'>('Physics');
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>([]);
+  const [createTestMsg, setCreateTestMsg] = useState<string | null>(null);
+
+  // ===== ADD RESOURCE FORM STATE =====
+  const [resTitle, setResTitle] = useState('');
+  const [resTag, setResTag] = useState('JEE Main');
+  const [resPrice, setResPrice] = useState('Free');
+  const [resType, setResType] = useState<'Notes' | 'Course' | 'Test Series' | 'Formula Sheet' | 'Practice Set'>('Notes');
+  const [showAddResource, setShowAddResource] = useState(false);
+
+  const toggleQuestionSelection = (qid: string) => {
+    setSelectedQuestionIds((prev) =>
+      prev.includes(qid) ? prev.filter((id) => id !== qid) : [...prev, qid]
+    );
+  };
+
+  const handleCreateTest = (e: React.FormEvent) => {
+    e.preventDefault();
+    const chosen = questions.filter((q) => selectedQuestionIds.includes(q.id));
+    if (!testTitle.trim() || chosen.length === 0) {
+      setCreateTestMsg('⚠️ Enter a title and select at least 1 question.');
+      return;
+    }
+    const test: Test = {
+      id: `test_fac_${Date.now()}`,
+      title: testTitle.trim(),
+      durationMinutes: testDuration,
+      totalMarks: testMarks,
+      targetExam: testExam,
+      testType,
+      subject: testSubject,
+      questions: chosen,
+      instructions: ['Read each question carefully.', 'Each correct answer carries equal marks.', 'No negative marking in this paper.'],
+      authorName: currentUser.name,
+      difficulty: 'Moderate',
+      attemptsCount: 0,
+      avgScore: 0,
+    };
+    createTest(test);
+    setCreateTestMsg(`✅ "${test.title}" (${chosen.length} Qs) published! Find it in Test Series.`);
+    setTestTitle('');
+    setSelectedQuestionIds([]);
+    setShowAddResource(false);
+    setTimeout(() => setCreateTestMsg(null), 4000);
+  };
+
+  const handleAddResource = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resTitle.trim()) return;
+    const item: ResourceItem = {
+      id: `res_${Date.now()}`,
+      title: resTitle.trim(),
+      tag: resTag.trim() || 'General',
+      price: resPrice.trim() || 'Free',
+      downloads: 0,
+      rating: 5,
+      authorName: currentUser.name,
+      createdAt: new Date().toISOString(),
+      contentType: resType,
+    };
+    addMarketplaceItem(item);
+    setResTitle('');
+    setShowAddResource(false);
+  };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
@@ -177,6 +223,14 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ initialTab =
           + Add Question / PYQ
         </button>
         <button
+          onClick={() => setActiveTab('create-test')}
+          className={`px-3.5 py-1.5 rounded-lg transition ${
+            activeTab === 'create-test' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          + Create Test
+        </button>
+        <button
           onClick={() => setActiveTab('doubts')}
           className={`px-3.5 py-1.5 rounded-lg transition ${
             activeTab === 'doubts' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-slate-200'
@@ -228,10 +282,16 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ initialTab =
                 </div>
 
                 <div className="flex items-center gap-2 pt-2">
-                  <button className="flex-1 py-1.5 rounded bg-purple-600 hover:bg-purple-500 text-xs font-semibold text-white transition">
+                  <button
+                    onClick={() => setCurrentView('test-series')}
+                    className="flex-1 py-1.5 rounded bg-purple-600 hover:bg-purple-500 text-xs font-semibold text-white transition"
+                  >
                     Assign Practice Drill
                   </button>
-                  <button className="py-1.5 px-2.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition">
+                  <button
+                    onClick={() => setCurrentView('teacher-batches')}
+                    className="py-1.5 px-2.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition"
+                  >
                     Student Roster
                   </button>
                 </div>
@@ -542,6 +602,115 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ initialTab =
         </div>
       )}
 
+      {/* Tab: Create Test (compose from question bank) */}
+      {activeTab === 'create-test' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold text-white uppercase tracking-wide">Compose a Test from the Question Bank</h2>
+            <span className="text-[11px] text-slate-400">{selectedQuestionIds.length} question(s) selected</span>
+          </div>
+
+          {createTestMsg && (
+            <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/40 text-emerald-300 text-xs">
+              {createTestMsg}
+            </div>
+          )}
+
+          <form onSubmit={handleCreateTest} className="space-y-3 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="sm:col-span-2">
+                <label className="block text-slate-400 mb-1">Test Title</label>
+                <input
+                  type="text"
+                  value={testTitle}
+                  onChange={(e) => setTestTitle(e.target.value)}
+                  placeholder="e.g. Physics Rotational Motion Chapter Test"
+                  className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-slate-400 mb-1">Duration (minutes)</label>
+                <input
+                  type="number"
+                  min={5}
+                  max={240}
+                  value={testDuration}
+                  onChange={(e) => setTestDuration(Number(e.target.value) || 60)}
+                  className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-400 mb-1">Total Marks</label>
+                <input
+                  type="number"
+                  min={10}
+                  value={testMarks}
+                  onChange={(e) => setTestMarks(Number(e.target.value) || 100)}
+                  className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-400 mb-1">Target Exam</label>
+                <select value={testExam} onChange={(e: any) => setTestExam(e.target.value)} className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200">
+                  <option>JEE Main</option>
+                  <option>JEE Advanced</option>
+                  <option>NEET UG</option>
+                  <option>CBSE Class 12</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-slate-400 mb-1">Test Type</label>
+                <select value={testType} onChange={(e: any) => setTestType(e.target.value)} className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200">
+                  <option>Full Mock</option>
+                  <option>Chapter Test</option>
+                  <option>PYQ Paper</option>
+                  <option>Institution Assessment</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-slate-400 mb-1">Subject</label>
+                <select value={testSubject} onChange={(e: any) => setTestSubject(e.target.value)} className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200">
+                  <option>Physics</option>
+                  <option>Chemistry</option>
+                  <option>Mathematics</option>
+                  <option>Biology</option>
+                  <option>All</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Question picker */}
+            <div>
+              <label className="block text-slate-400 mb-1.5">Select questions to include ({questions.length} in bank)</label>
+              <div className="max-h-72 overflow-y-auto round-lg border border-slate-800 rounded-lg divide-y divide-slate-800">
+                {questions.map((q) => (
+                  <label key={q.id} className={`flex items-start gap-3 p-3 cursor-pointer transition ${selectedQuestionIds.includes(q.id) ? 'bg-blue-600/10' : 'hover:bg-slate-800/50'}`}>
+                    <input
+                      type="checkbox"
+                      checked={selectedQuestionIds.includes(q.id)}
+                      onChange={() => toggleQuestionSelection(q.id)}
+                      className="mt-0.5 accent-blue-500"
+                    />
+                    <span className="flex-1">
+                      <span className="text-[11px] text-slate-300 font-semibold">{q.subject} · {q.chapter}</span>
+                      <span className="block text-[11px] text-slate-400 mt-0.5 line-clamp-2">{q.questionText}</span>
+                    </span>
+                  </label>
+                ))}
+                {questions.length === 0 && (
+                  <p className="p-3 text-xs text-slate-500">Question bank is empty. Add questions first via "+ Add Question / PYQ".</p>
+                )}
+              </div>
+            </div>
+
+            <button type="submit" className="px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs">
+              Publish Test to Test Series
+            </button>
+          </form>
+        </div>
+      )}
+
       {/* Tab 3: Marketplace */}
       {activeTab === 'marketplace' && (
         <div className="space-y-4">
@@ -549,13 +718,72 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ initialTab =
             <h2 className="text-sm font-bold text-white uppercase tracking-wide">
               Your Freemium Study Materials & Courses
             </h2>
-            <button className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold">
-              + Add New Resource
+            <button
+              onClick={() => setShowAddResource((v) => !v)}
+              className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold"
+            >
+              {showAddResource ? 'Cancel' : '+ Add New Resource'}
             </button>
           </div>
 
+          {/* Add resource form (real, functional) */}
+          {showAddResource && (
+            <form onSubmit={handleAddResource} className="p-4 rounded-xl bg-slate-900 border border-slate-700 space-y-3 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="block text-slate-400 mb-1">Resource Title</label>
+                  <input
+                    type="text"
+                    value={resTitle}
+                    onChange={(e) => setResTitle(e.target.value)}
+                    placeholder="e.g. Rotational Motion Formula Sheet"
+                    className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-purple-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1">Tag</label>
+                  <input
+                    type="text"
+                    value={resTag}
+                    onChange={(e) => setResTag(e.target.value)}
+                    placeholder="e.g. JEE Main"
+                    className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1">Price</label>
+                  <input
+                    type="text"
+                    value={resPrice}
+                    onChange={(e) => setResPrice(e.target.value)}
+                    placeholder="Free or ₹299"
+                    className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-slate-400 mb-1">Content Type</label>
+                  <select
+                    value={resType}
+                    onChange={(e: any) => setResType(e.target.value)}
+                    className="w-full p-2.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-200"
+                  >
+                    <option>Notes</option>
+                    <option>Course</option>
+                    <option>Test Series</option>
+                    <option>Formula Sheet</option>
+                    <option>Practice Set</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-semibold">
+                Publish Resource
+              </button>
+            </form>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {sampleMarketplaceItems.map((item) => (
+            {marketplaceItems.map((item) => (
               <div key={item.id} className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
                 <div className="flex items-start justify-between">
                   <span className="text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-semibold border border-purple-500/30">
@@ -565,6 +793,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ initialTab =
                 </div>
 
                 <h3 className="text-xs font-bold text-white leading-snug">{item.title}</h3>
+                <p className="text-[10px] text-slate-500">
+                  by {item.authorName} · {item.contentType}
+                </p>
 
                 <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-800">
                   <span>{item.downloads} downloads</span>
@@ -573,8 +804,19 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ initialTab =
                     {item.rating}
                   </span>
                 </div>
+                <button
+                  onClick={() => removeMarketplaceItem(item.id)}
+                  className="w-full py-1.5 rounded-md bg-slate-800 hover:bg-rose-500/20 border border-slate-700 text-rose-300 text-[11px] font-semibold"
+                >
+                  Remove
+                </button>
               </div>
             ))}
+            {marketplaceItems.length === 0 && (
+              <p className="col-span-3 text-slate-500 text-xs">
+                No resources yet. Click "+ Add New Resource" to publish your first one.
+              </p>
+            )}
           </div>
         </div>
       )}

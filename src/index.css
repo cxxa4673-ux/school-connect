@@ -41,6 +41,19 @@ html, body {
   touch-action: manipulation;
 }
 
+/* Prevent horizontal overflow/scroll on mobile (wide tables, boards, etc.).
+   Content that genuinely needs to scroll horizontally gets a `<div className="overflow-x-auto">`. */
+html, body, #root {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* Mobile-first: always allow vertical scrolling, never let wide content push the viewport. */
+img, video, canvas, table {
+  max-width: 100%;
+  height: auto;
+}
+
 @keyframes slideLeft {
   from {
     transform: translateX(100%);

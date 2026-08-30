@@ -70,6 +70,7 @@ export const Sidebar: React.FC = () => {
     { id: 'syllabus', label: 'Student Syllabus Mastery Matrix', icon: MapPin, badge: 'Physics', badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/30' },
     { id: 'teacher-batches', label: 'My Batches & Students', icon: Users, badge: '3 Batches', badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/30' },
     { id: 'teacher-create-question', label: '+ Add Question / PYQ', icon: FilePlus },
+    { id: 'teacher-create-test', label: '+ Compose Test', icon: Timer },
     { id: 'teacher-marketplace', label: 'Content Marketplace', icon: ShoppingBag, badge: '₹4.2k', badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' },
   ];
 
