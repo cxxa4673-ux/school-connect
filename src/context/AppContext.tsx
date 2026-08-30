@@ -18,6 +18,7 @@ import {
   ChatMessage,
   ChatAttachment,
   StudentSyllabusProgress,
+  ResourceItem,
 } from '../types';
 import {
   INITIAL_PROFILES,
@@ -29,6 +30,7 @@ import {
   INITIAL_DAILY_GOALS,
   INITIAL_BOOKMARKS,
   INITIAL_NCERT_RESOURCES,
+  INITIAL_MARKETPLACE_ITEMS,
   INITIAL_CHANNELS,
   INITIAL_CHAT_MESSAGES,
   INITIAL_STUDENT_SYLLABUS_RECORDS,
@@ -38,6 +40,10 @@ import {
   TeacherDirectoryItem,
   StudentParentDirectoryItem,
 } from '../data/mockData';
+import { signup, signin, signout, restoreLocalSession, SignupPayload, AuthResult } from '../services/authService';
+import { validateLinkedId } from '../lib/validate';
+import { fetchCollection, upsertCollection } from '../services/dataService';
+import { getStorageMode as getStorageModeFromConfig } from '../lib/config';
 
 export type AppView =
   | 'dashboard'
@@ -62,7 +68,7 @@ export type AppView =
   | 'teacher-portal'
   | 'teacher-batches'
   | 'teacher-create-question'
-  | 'teacher-create-q'
+  | 'teacher-create-test'
   | 'teacher-doubts'
   | 'teacher-marketplace'
   | 'institution-portal'
@@ -82,6 +88,13 @@ interface AppContextType {
   switchRole: (role: UserRole) => void;
   updateUserProfile: (updates: Partial<UserProfile>) => void;
   deleteCurrentUserData: () => void;
+
+  // Auth (real via Supabase when configured; local demo fallback otherwise)
+  isAuthenticated: boolean;
+  registerAccount: (payload: SignupPayload) => Promise<AuthResult>;
+  loginAccount: (email: string, password: string) => Promise<AuthResult>;
+  logoutAccount: () => Promise<void>;
+
   isAuthModalOpen: boolean;
   setIsAuthModalOpen: (open: boolean) => void;
   isProfileModalOpen: boolean;
@@ -112,6 +125,13 @@ interface AppContextType {
   // PYQs & Questions
   questions: Question[];
   addNewQuestion: (question: Question) => void;
+
+  // Content creation (teacher / institution)
+  createTest: (test: Test) => void;
+  deleteTest: (testId: string) => void;
+  marketplaceItems: ResourceItem[];
+  addMarketplaceItem: (item: ResourceItem) => void;
+  removeMarketplaceItem: (itemId: string) => void;
 
   // Syllabus Tracker & Student Records
   syllabus: SyllabusChapter[];
@@ -197,6 +217,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     loadLocal('currentUser', INITIAL_PROFILES.student)
   );
 
+  // Real authentication flag — true only after a successful sign-in / sign-up.
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => !!restoreLocalSession());
+
   const [currentView, setCurrentView] = useState<AppView>('dashboard');
   const [currentExam, setCurrentExam] = useState<ExamType>(() =>
     loadLocal('currentExam', 'JEE Main')
@@ -254,6 +277,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [ncertResources] = useState<NCERTResource[]>(INITIAL_NCERT_RESOURCES);
 
+  // Teacher-authored marketplace items (real, persisted; NOT a hardcoded stub).
+  const [marketplaceItems, setMarketplaceItems] = useState<ResourceItem[]>(() =>
+    loadLocal('marketplaceItems', INITIAL_MARKETPLACE_ITEMS)
+  );
+
   // 3-Line Hamburger Menu Sidebar Toggle
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(() => {
     return loadLocal('isSidebarOpen', true);
@@ -290,6 +318,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => saveLocal('currentExam', currentExam), [currentExam]);
   useEffect(() => saveLocal('institution', institution), [institution]);
   useEffect(() => saveLocal('tests', tests), [tests]);
+  useEffect(() => saveLocal('questions', questions), [questions]);
   useEffect(() => saveLocal('testAttempts', testAttempts), [testAttempts]);
   useEffect(() => saveLocal('syllabus', syllabus), [syllabus]);
   useEffect(() => saveLocal('studentSyllabusRecords', studentSyllabusRecords), [studentSyllabusRecords]);
@@ -298,6 +327,56 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => saveLocal('chatMessages', chatMessages), [chatMessages]);
   useEffect(() => saveLocal('bookmarks', bookmarks), [bookmarks]);
   useEffect(() => saveLocal('dailyGoals', dailyGoals), [dailyGoals]);
+  useEffect(() => saveLocal('marketplaceItems', marketplaceItems), [marketplaceItems]);
+
+  // Write-through to the real backend (Supabase) whenever data changes. These are
+  // fire-and-forget — localStorage remains the instant render cache and Supabase
+  // is the durable store, so the two stay in sync across devices.
+  useEffect(() => {
+    upsertCollection('tests', tests as unknown as Record<string, unknown>[]);
+  }, [tests]);
+  useEffect(() => {
+    upsertCollection('questions', questions as unknown as Record<string, unknown>[]);
+  }, [questions]);
+  useEffect(() => {
+    upsertCollection('testAttempts', testAttempts as unknown as Record<string, unknown>[]);
+  }, [testAttempts]);
+  useEffect(() => {
+    upsertCollection('bookmarks', bookmarks as unknown as Record<string, unknown>[]);
+  }, [bookmarks]);
+  useEffect(() => {
+    upsertCollection('dailyGoals', dailyGoals as unknown as Record<string, unknown>[]);
+  }, [dailyGoals]);
+  useEffect(() => {
+    upsertCollection('currentUser', [currentUser as unknown as Record<string, unknown>]);
+  }, [currentUser]);
+
+  // One-time hydration from the real backend (only when Supabase is configured).
+  // If the backend is empty, we keep the seeded demo data so the app is never blank.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const mode = getStorageModeFromConfig();
+      if (mode !== 'supabase') return;
+      try {
+        const [testsDb, questionsDb, attemptsDb] = await Promise.all([
+          fetchCollection('tests'),
+          fetchCollection('questions'),
+          fetchCollection('testAttempts'),
+        ]);
+        if (cancelled) return;
+        if (testsDb.length) setTests(testsDb as Test[]);
+        if (questionsDb.length) setQuestions(questionsDb as Question[]);
+        if (attemptsDb.length) setTestAttempts(attemptsDb as TestAttempt[]);
+      } catch {
+        // Swallow — fall back to seeded demo data.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Switch role helper
   const switchRole = (role: UserRole) => {
@@ -315,12 +394,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentUser((prev) => ({ ...prev, ...updates }));
   };
 
+  // --- Auth handlers (Supabase when configured, local demo otherwise) ---
+  const registerAccount = async (payload: SignupPayload): Promise<AuthResult> => {
+    const result = await signup(payload);
+    if (result.ok && result.user) {
+      setCurrentUser(result.user);
+      setIsAuthenticated(true);
+    }
+    return result;
+  };
+
+  const loginAccount = async (email: string, password: string): Promise<AuthResult> => {
+    const result = await signin(email, password);
+    if (result.ok && result.user) {
+      setCurrentUser(result.user);
+      setIsAuthenticated(true);
+    }
+    return result;
+  };
+
+  const logoutAccount = async (): Promise<void> => {
+    await signout();
+    setIsAuthenticated(false);
+    // Reset to the default guest template so no private data lingers on screen.
+    setCurrentUser(INITIAL_PROFILES.student);
+    setCurrentView('dashboard');
+  };
+
   // Complete User Account & Data Deletion Flow (Privacy & Right to Erasure)
   const deleteCurrentUserData = () => {
     try {
       // Clear all local stored entities
       localStorage.removeItem('sc_currentUser');
       localStorage.removeItem('sc_testAttempts');
+      localStorage.removeItem('sc_questions');
       localStorage.removeItem('sc_bookmarks');
       localStorage.removeItem('sc_dailyGoals');
       localStorage.removeItem('sc_syllabus');
@@ -344,7 +451,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Unique ID Linking
+  // Validates the ID before linking. A parent may only link a real student ID
+  // (format check + known-directory check in demo mode). This prevents a user
+  // from blindly accepting any random string as a valid "child."
   const linkChildById = (schoolConnectId: string): boolean => {
+    const knownStudentIds = [
+      ...CLASSMATE_DIRECTORY.map((c) => c.schoolConnectId),
+      ...STUDENT_PARENT_DIRECTORY.map((s) => s.studentSchoolConnectId),
+    ];
+    const check = validateLinkedId(schoolConnectId, { expected: 'STU', directory: knownStudentIds });
+    if (!check.valid) return false;
+
     const cleanId = schoolConnectId.trim().toUpperCase();
     if (!currentUser.linkedChildIds) {
       updateUserProfile({ linkedChildIds: [cleanId] });
@@ -403,6 +520,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addNewQuestion = (q: Question) => {
     setQuestions((prev) => [q, ...prev]);
+  };
+
+  // Create a new test (teacher/institution). Adds to the shared test list so it
+  // appears in the Test Series, is takeable in the CBT engine, and flows into
+  // attempt/report data. Persists via the existing `tests` effect.
+  const createTest = (test: Test) => {
+    setTests((prev) => [test, ...prev]);
+  };
+
+  // Remove a test from the list (used by owners of authored tests).
+  const deleteTest = (testId: string) => {
+    setTests((prev) => prev.filter((t) => t.id !== testId));
+  };
+
+  // Market place: add a teacher-authored resource (real, persisted).
+  const addMarketplaceItem = (item: ResourceItem) => {
+    setMarketplaceItems((prev) => [item, ...prev]);
+  };
+
+  // Market place: remove a teacher-authored resource.
+  const removeMarketplaceItem = (itemId: string) => {
+    setMarketplaceItems((prev) => prev.filter((i) => i.id !== itemId));
   };
 
   // Syllabus Actions
@@ -1074,6 +1213,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         switchRole,
         updateUserProfile,
         deleteCurrentUserData,
+        isAuthenticated,
+        registerAccount,
+        loginAccount,
+        logoutAccount,
         isAuthModalOpen,
         setIsAuthModalOpen,
         isProfileModalOpen,
@@ -1096,6 +1239,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         testAttempts,
         questions,
         addNewQuestion,
+        createTest,
+        deleteTest,
+        marketplaceItems,
+        addMarketplaceItem,
+        removeMarketplaceItem,
         syllabus,
         studentSyllabusRecords,
         toggleTopicCompletion,

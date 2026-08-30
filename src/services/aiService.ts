@@ -57,6 +57,8 @@ export async function sendAIChatMessage(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: latestMessage,
+        // Send the full conversation history so the model keeps context across turns.
+        history: messages,
         context: { targetExam, role: userRole },
       }),
     });

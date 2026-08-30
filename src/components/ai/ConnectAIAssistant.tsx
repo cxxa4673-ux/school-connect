@@ -246,7 +246,7 @@ export const ConnectAIAssistant: React.FC = () => {
     <>
       {/* 1. PERSISTENT FLOATING TRIGGER BUTTON (VISIBLE IN ALL MODES) */}
       {!isAIAssistantOpen && (
-        <div className="fixed bottom-20 lg:bottom-6 right-4 sm:right-6 z-50 flex items-center gap-3 select-none pointer-events-auto">
+        <div className="fixed bottom-24 lg:bottom-8 right-4 sm:right-6 z-[70] flex items-center gap-3 select-none pointer-events-auto">
           <button
             id="floating-gemini-ai-button"
             onClick={() => setIsAIAssistantOpen(true)}

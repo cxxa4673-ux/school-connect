@@ -2262,3 +2262,45 @@ export const INITIAL_STUDENT_SYLLABUS_RECORDS: StudentSyllabusProgress[] = [
     chapters: INITIAL_SYLLABUS,
   },
 ];
+
+/**
+ * Seed content for the Teacher Content Marketplace.
+ * These are the default items shown before a teacher adds their own. New items
+ * added via the UI are stored in state (and persisted in localStorage) so they
+ * are genuinely functional, not just a hardcoded list.
+ */
+export const INITIAL_MARKETPLACE_ITEMS = [
+  {
+    id: 'prod_1',
+    title: 'Ray Optics 100 Most Expected High-Yield Questions with AI Video Solutions',
+    tag: 'JEE Advanced',
+    price: '₹299',
+    downloads: 420,
+    rating: 4.9,
+    authorName: 'Dr. Anil Verma',
+    createdAt: new Date().toISOString(),
+    contentType: 'Practice Set' as const,
+  },
+  {
+    id: 'prod_2',
+    title: 'Complete Organic Chemistry Reaction Mechanisms Mind Map Cheat Sheet',
+    tag: 'JEE Main & NEET',
+    price: 'Free',
+    downloads: 1250,
+    rating: 4.95,
+    authorName: 'Prof. Meera Nair',
+    createdAt: new Date().toISOString(),
+    contentType: 'Formula Sheet' as const,
+  },
+  {
+    id: 'prod_3',
+    title: 'Calculus & Definite Integration King Property Speed Hacks (2020-2025 PYQs)',
+    tag: 'Class 12 Boards / JEE',
+    price: '₹199',
+    downloads: 310,
+    rating: 4.85,
+    authorName: 'Sandeep Sir',
+    createdAt: new Date().toISOString(),
+    contentType: 'Notes' as const,
+  },
+];

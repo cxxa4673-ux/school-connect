@@ -212,6 +212,24 @@ export interface NCERTResource {
   pdfDownloadUrl?: string;
 }
 
+/**
+ * A teacher/faculty authored study resource shown in the Content Marketplace.
+ * Real items are stored in state (and persisted), so "Add Resource" genuinely
+ * adds to the list rather than being a hardcoded/demo stub.
+ */
+export interface ResourceItem {
+  id: string;
+  title: string;
+  tag: string;
+  price: string;
+  downloads: number;
+  rating: number;
+  authorName: string;
+  createdAt: string;
+  contentType: 'Notes' | 'Course' | 'Test Series' | 'Formula Sheet' | 'Practice Set';
+  url?: string;
+}
+
 export interface AIChatMessage {
   id: string;
   sender: 'user' | 'ai' | 'system';

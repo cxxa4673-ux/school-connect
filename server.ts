@@ -10,6 +10,9 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 const IS_PROD = process.env.NODE_ENV === 'production';
+// Which Gemini model powers the AI endpoints. Overridable via .env so adding a
+// key to a newer model name requires no code change.
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
 
 // 1. Disable server fingerprinting (Hacker reconnaissance defense)
 app.disable('x-powered-by');
@@ -116,9 +119,14 @@ const rateLimiter = (req: Request, res: Response, next: NextFunction) => {
   const ip = req.ip || req.socket.remoteAddress || '127.0.0.1';
   const now = Date.now();
   
-  // Guard map size against spoofed IP flood
+  // Guard map size against spoofed IP flood: evict the oldest expired entries
+  // instead of clearing the whole map (which would reset everyone's budget).
   if (rateLimitMap.size > MAX_TRACKED_IPS) {
-    rateLimitMap.clear();
+    const sorted = [...rateLimitMap.entries()].sort((a, b) => a[1].resetTime - b[1].resetTime);
+    const toEvict = sorted.slice(0, Math.ceil(rateLimitMap.size * 0.1));
+    for (const [oldIp] of toEvict) {
+      rateLimitMap.delete(oldIp);
+    }
   }
 
   const record = rateLimitMap.get(ip);
@@ -185,7 +193,9 @@ app.post('/api/ai/chat', async (req: Request, res: Response) => {
   try {
     const rawMessage = req.body?.message;
     const rawContext = req.body?.context || {};
-    
+    // Optional multi-turn conversation history from the client.
+    const rawHistory = Array.isArray(req.body?.history) ? req.body.history : [];
+
     // Sanitize user inputs
     const message = sanitizeString(rawMessage, 2000);
     const targetExam = sanitizeString(rawContext.targetExam || 'JEE Main', 50);
@@ -229,9 +239,24 @@ Student Context:
 
 Be concise, mathematically sound, supportive, and pedagogical. Format equations clearly using standard text/markdown notation. Provide mnemonic tricks and shortcut formulas when applicable. Keep replies under 250 words unless asked for a complete derivation.`;
 
+    // Build a multi-turn conversational thread from the client-provided history.
+    const historyTurns = rawHistory
+      .filter((t: any) => t && typeof t.text === 'string')
+      .slice(-12)
+      .map((t: any) => ({
+        role: t.sender === 'assistant' || t.sender === 'model' ? 'model' : 'user',
+        parts: [{ text: String(t.text).slice(0, 2000) }],
+      }));
+
+    // The client's history already ends with the latest user message, so only
+    // append `message` when it is not already the final turn (avoids duplicates).
+    const lastTurn = historyTurns[historyTurns.length - 1];
+    const conversation =
+      lastTurn && lastTurn.role === 'user' ? historyTurns : [...historyTurns, { role: 'user', parts: [{ text: message }] }];
+
     const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
-      contents: message,
+      model: GEMINI_MODEL,
+      contents: conversation,
       config: {
         systemInstruction,
         temperature: 0.7,
@@ -311,7 +336,7 @@ Provide a structured JSON response with:
 5. "suggestedRevisionQueue": list of 3 high-yield topics to revise in the next 7 days.`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
+      model: GEMINI_MODEL,
       contents: prompt,
       config: {
         responseMimeType: 'application/json',
@@ -366,7 +391,7 @@ Output valid JSON with structure:
 }`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
+      model: GEMINI_MODEL,
       contents: prompt,
       config: { responseMimeType: 'application/json' },
     });
@@ -427,7 +452,7 @@ Return valid JSON with keys:
 - "institutionRating"`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
+      model: GEMINI_MODEL,
       contents: prompt,
       config: { responseMimeType: 'application/json' },
     });
@@ -497,7 +522,7 @@ Provide JSON:
 }`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
+      model: GEMINI_MODEL,
       contents: prompt,
       config: { responseMimeType: 'application/json' },
     });
@@ -540,7 +565,7 @@ app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, allowedHosts: true, host: '0.0.0.0' },
       appType: 'spa',
     });
     app.use(vite.middlewares);
