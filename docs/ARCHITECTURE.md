@@ -71,11 +71,24 @@ centralized in `src/lib/config.ts`.**
 
 ```
 school-connect/
-├─ server.ts                     Express + Gemini AI + security middleware
+├─ server.ts                     Local Express host: middleware + mounts api/_lib handlers
+├─ vercel.json                   Vercel build/serve config (SPA fallback + headers)
 ├─ vite.config.ts                Vite + Tailwind + chunk splitting
-├─ package.json                  scripts (dev/build/test/start/lint)
+├─ package.json                  scripts (dev/build/build:app/build:server/test/start/lint)
 ├─ .env.example                  every env var, documented
 ├─ docs/ARCHITECTURE.md          this file
+├─ api/                          Serverless deployment surface (see §10)
+│  ├─ _lib/
+│  │  ├─ http.ts                 sanitizers, body reading, origin/LB guards, rate limit
+│  │  ├─ gemini.ts               Gemini client + JSON generation helper
+│  │  └─ handlers.ts             ALL endpoint logic (shared with server.ts)
+│  ├─ health.ts                  GET  /api/health
+│  ├─ ai/chat.ts                 POST /api/ai/chat
+│  ├─ ai/weakness-analysis.ts    POST /api/ai/weakness-analysis
+│  ├─ ai/smart-revision.ts       POST /api/ai/smart-revision
+│  ├─ ai/progress-report.ts      POST /api/ai/progress-report
+│  ├─ ai/explain-question.ts     POST /api/ai/explain-question
+│  └─ __tests__/                 handler + vercel.json guard tests
 ├─ supabase/migrations/          Postgres schema + RLS policies
 └─ src/
    ├─ main.tsx                   React entry + <ErrorBoundary>
@@ -145,14 +158,16 @@ Database (Supabase):
 
 ## 7. Commands
 
-| Command            | What it does                                            |
-|--------------------|---------------------------------------------------------|
-| `npm run dev`      | Start Express + Vite dev server (http://0.0.0.0:3000)    |
-| `npm run build`    | Production build (vite + esbuild server) → `dist/`        |
-| `npm start`        | Serve the production build                               |
-| `npm run lint`     | Type-check with `tsc --noEmit`                           |
-| `npm test`         | Run the Vitest unit tests                                |
-| `npm run clean`    | Remove `dist/`                                           |
+| Command               | What it does                                            |
+|-----------------------|---------------------------------------------------------|
+| `npm run dev`         | Start Express + Vite dev server (http://0.0.0.0:3000)    |
+| `npm run build`       | Web bundle + server bundle (self-hosting) → `dist/`      |
+| `npm run build:app`   | Web bundle only — the command Vercel runs                |
+| `npm run build:server`| esbuild bundle of `server.ts` for `npm start`            |
+| `npm start`           | Serve the production build with Express                  |
+| `npm run lint`        | Type-check with `tsc --noEmit`                           |
+| `npm test`            | Run the Vitest unit tests (src/ + api/)                  |
+| `npm run clean`       | Remove `dist/`                                           |
 
 ---
 
@@ -170,7 +185,43 @@ Database (Supabase):
 
 ---
 
-## 9. Known limitations / next steps
+## 9. Deployment (Vercel)
+
+`vercel.json` is the source of truth for production shape:
+
+```jsonc
+{
+  "framework": "vite",
+  "buildCommand": "npm run build:app",   // vite build only — no Express bundle on Vercel
+  "outputDirectory": "dist",
+  "installCommand": "npm install",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "headers":  [ /* nosniff, frame options, referrer, permissions, asset caching */ ]
+}
+```
+
+**One implementation, two hosts.** `api/_lib/handlers.ts` holds the endpoint
+logic. Vercel routes `api/**` (one function per endpoint) and the local Express
+server mounts the same functions, so there is no "works locally, breaks in prod"
+gap. `api/_lib` is never routed because Vercel ignores paths starting with `_`.
+
+**Rules that matter when editing `vercel.json`:**
+
+- `rewrites[].source` is parsed with **path-to-regexp**, not RegExp. Negative
+  lookaheads like `/((?!api/).*)` make Vercel abort the build with
+  *"invalid `source` pattern"*. The canonical `/(.*)` is correct because Vercel
+  checks the filesystem **before** applying rewrites — real assets and `/api/*`
+  functions win automatically.
+- Keep `buildCommand` on `npm run build:app`. `npm run build` also bundles
+  `server.ts` with esbuild, which is only needed for `npm start` (self-hosting).
+- `VITE_*` env vars are inlined at build time → redeploy after changing them.
+
+`api/__tests__/vercel-config.test.ts` enforces all of the above in CI-less
+`npm test`.
+
+---
+
+## 10. Known limitations / next steps
 
 - **Multi-tenancy**: currently a single-tenant demo. Institutions are mock data.
   Real per-school isolation requires tightening the RLS policies and passing a
